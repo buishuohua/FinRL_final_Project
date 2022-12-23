@@ -208,20 +208,32 @@ class StockLearningEnv(gym.Env):
         self.episode_history.append(rec)
         print(self.template.format(*rec))
 
-    def get_reward(self) -> float:
-        """获取奖励值"""
-        if self.current_step == 0:
-            return 0
-        else:
-            assets = self.account_information["total_assets"][-1]
-            retreat = 0
-            if assets >= self.max_total_assets:
-                self.max_total_assets = assets
+    def get_reward(self, method=2) -> float:
+        """获取奖励值
+        method = 1: reward为 t日相对initial_money的收益率
+        method = 2: reward为 t+1日相对initial_money的收益率 - 当前回测率
+        """
+        if method == 1:
+            if self.current_step == 0:
+                return 0
             else:
-                retreat = assets / self.max_total_assets - 1
-            reward = assets / self.initial_amount - 1
-            reward += retreat
-            return reward
+                assets = self.account_information["total_assets"][-1]
+                reward = assets / self.initial_amount - 1
+                return reward
+
+        if method == 2:
+            if self.current_step == 0:
+                return 0
+            else:
+                assets = self.account_information["total_assets"][-1]
+                retreat = 0
+                if assets >= self.max_total_assets:
+                    self.max_total_assets = assets
+                else:
+                    retreat = assets / self.max_total_assets - 1
+                reward = assets / self.initial_amount - 1
+                reward += retreat
+                return reward
 
     def get_transactions(self, actions: np.ndarray) -> np.ndarray:
         """获取实际交易的股数"""
@@ -303,3 +315,24 @@ class StockLearningEnv(gym.Env):
         e = DummyVecEnv([get_self])
         obs = e.reset()
         return e, obs
+
+    def save_asset_memory(self) -> pd.DataFrame:
+        if self.current_step == 0:
+            return None
+        else:
+            self.account_information["date"] = self.dates[
+                -len(self.account_information["cash"]):
+            ]
+            return pd.DataFrame(self.account_information)
+    
+    def save_action_memory(self) -> pd.DataFrame:
+        if self.current_step == 0:
+            return None
+        else:
+            return pd.DataFrame(
+                {
+                    "date": self.dates[-len(self.account_information["cash"]):],
+                    "actions": self.actions_memory,
+                    "transactions": self.transaction_memory
+                }
+            )
