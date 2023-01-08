@@ -16,8 +16,6 @@ state_space = (1 + 资产数量 + 资产数量 * 资产指标数)
 
 资产指标数 = ["open", "close", "high", "low", "volume"]
 
----
-
 action_ space = (资产数量)  ， 区间为[-1, 1]
 
 **随机开始**：
@@ -45,5 +43,3 @@ action的shape是什么样的？
 基于各种算法对应的交易策略：
 
 DDPG，A2C，PPO，TD3，SAC
-
-我目前做了PPO的50000步，我下一步想做下ensemble的尝试，把5个模型的prediction预测综合下。
